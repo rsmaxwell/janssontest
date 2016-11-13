@@ -1,6 +1,6 @@
 {
    "groupId": "com.rsmaxwell",
-   "artifactId": "jansson.test",
+   "artifactId": "janssontest",
    "version": "${version}",
    "properties": {
       "repository": "snapshots",
