@@ -1,0 +1,166 @@
+
+apply plugin: 'c'
+apply plugin: 'cunit-test-suite'
+apply plugin: 'maven-publish'
+
+import org.apache.tools.ant.taskdefs.condition.Os
+
+
+task generateSource {
+    ext.sourceDir = new File(buildDir, 'generated/c')
+    ext.headerDir = new File(buildDir, 'generated/headers')
+    doFirst {
+        println("Generating source ...")
+
+        sourceDir.mkdirs()
+        headerDir.mkdirs()
+
+        File template = new File('src/jansson/c/jansson_config.h.in')
+        File target = new File(headerDir, 'jansson_config.h')
+        ant.copy(tofile: target) {
+            fileset(file: template)
+            filterset {
+                filter(token: 'json_inline', value: '__inline')
+                filter(token: 'json_have_long_long', value: '1')
+                filter(token: 'json_have_localeconv', value: '1')
+            }
+        }
+
+        new File(headerDir, 'jansson_private_config.h').withWriter { out ->
+            out.println '#include <stdint.h>'
+        }
+
+        new File(sourceDir, 'foobar.c').withWriter { out ->
+            out.println '#include <stdio.h>'
+            out.println 'void foobar() {'
+            out.println '  printf("foobar");'
+            out.println '}'
+        }
+    }
+}
+
+model {
+    buildTypes {
+        debug
+        release
+    }
+    components {
+        jansson(NativeLibrarySpec) {
+            sources {
+                c {
+                    builtBy tasks.generateSource
+                    source {
+                        srcDirs "src/jansson/c"
+                        include "**/*.c"
+                    }
+                    exportedHeaders {
+                        srcDirs "src/jansson/headers"
+                        include "**/*.h"
+                    }
+                }
+                generated(CSourceSet) {
+                    source {
+                        srcDirs tasks.generateSource.sourceDir
+                        include "**/*.c"
+                    }
+                    exportedHeaders {
+                        srcDirs tasks.generateSource.headerDir
+                        include "**/*.h"
+                    }
+                }
+            }
+        }
+    }
+    binaries {
+        all {
+            if (toolChain in Gcc) {
+                cCompiler.define "HAVE_CONFIG_H"
+                if (buildType == buildTypes.debug) {
+                    cCompiler.args "-O2"
+                    linker.args "-Xlinker", "-S"
+                }
+            }
+            if (toolChain in VisualCpp) {
+                cCompiler.define "HAVE_CONFIG_H"
+                if (buildType == buildTypes.debug) {
+                    cCompiler.args "/I${generateSource.ext.headerDir}", "/Zi"
+                    linker.args "/DEBUG"
+                }
+                else {
+                    cCompiler.args "/I${generateSource.ext.headerDir}"
+                }
+            }
+        }
+        withType(CUnitTestSuiteBinarySpec) {
+            lib library: "cunit", linkage: "static"
+        }
+        withType(SharedLibraryBinarySpec) {
+            if (toolChain in VisualCpp) {
+                cCompiler.define "DLL_EXPORT"
+            }
+        }
+    }
+    testSuites {
+        test(CUnitTestSuiteSpec) {
+            testing $.components.jansson
+        }
+    }
+    repositories {
+        libs(PrebuiltLibraries) {
+            cunit {
+                headers.srcDir "libs/cunit/2.1-2/include"
+                binaries.withType(StaticLibraryBinary) {
+                    staticLibraryFile = file("libs/cunit/2.1-2/lib/" + findCUnitLibForPlatform(targetPlatform))
+                }
+            }
+        }
+    }
+}
+
+def detect() {
+    def name = "?"
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        name = "windows"
+    } else if (Os.isFamily(Os.FAMILY_UNIX)) {
+        name = "linux"
+    } else {
+        name = "unknown"
+    }
+    return name + "-" + System.getProperty('os.arch')
+}
+
+task zip(type: Zip, dependsOn: build) {
+    baseName = 'jansson'
+    classifier detect()
+    from('src/jansson/headers') { into('headers') }
+    from('build/libs/jansson') { into('libs') }
+    destinationDir file('build/distribution')
+}
+
+publishing {
+    publications {
+        impl(MavenPublication) {
+            groupId 'com.rsmaxwell'
+            artifactId 'jansson'
+            version "$version"
+            artifact zip
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username "$mavenUser"
+                password "$mavenPassword"
+            }
+            url "http://www.rsmaxwell.co.uk/nexus/content/repositories/$repository"
+        }
+    }
+}
+
+def findCUnitLibForPlatform(Platform platform) {
+    if (platform.operatingSystem.windows) {
+        return "vs2013/cunit.lib"
+    } else {
+        return "linux/libcunit.a"
+    }
+}
