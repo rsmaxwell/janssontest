@@ -677,6 +677,12 @@ def readLastUpdatedFile(config, directory):
 
     filepath = os.path.abspath(directory + '/' + 'lastUpdated.json')
 
+    if not os.path.exists(filepath):
+        if verbose(config):
+            print('Dependancy not found in local repository')
+            print(filepath)
+        return None
+
     data = {}
     with open(filepath) as file:
         data.update(json.load(file))
@@ -687,6 +693,7 @@ def readLastUpdatedFile(config, directory):
     print('    now = ' + now)
     print('    lastChecked = ' + lastChecked)
 
+    return lastChecked
 
 ####################################################################################################
 # Write the "lastUpdated.json" file to the local directory
@@ -700,6 +707,9 @@ def writeLastUpdatedFile(config, directory):
 
     timestamp = '{:%Y%m%d.%H%M%S}'.format(datetime.datetime.now())
     data = {'lastChecked': timestamp}
+
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
     filepath = os.path.abspath(directory + '/' + 'lastUpdated.json')
 
@@ -950,7 +960,7 @@ def main(argv):
             print('The Compiler gcc is not available')
             sys.exit(1)
 
-        stdout, stderr, returncode = runProgram(args.debug, os.getcwd(), os.environ, [gcc, '-v'])
+        stdout, stderr, returncode = runProgram(config, os.getcwd(), os.environ, [gcc, '-v'])
 
         lines = stderr.splitlines()
         for line in lines:
