@@ -802,6 +802,17 @@ def downloadArtifact(config, mavenGroupId, mavenArtifactId,  version, packaging)
         sys.exit(99)
 
 
+
+####################################################################################################
+# Clean
+####################################################################################################
+
+def clean(config, build):
+
+    shutil.rmtree(build, ignore_errors=True)
+
+
+
 ####################################################################################################
 # Expand artifact
 ####################################################################################################
@@ -834,6 +845,120 @@ def expandArtifact(config, mavenGroupId, mavenArtifactId, version, packaging, de
     with zipfile.ZipFile(localpath, 'r') as z:
         z.extractall(directory)
 
+
+####################################################################################################
+# Generate
+####################################################################################################
+
+def generate(config, aol, packaging, dependances):
+
+    for dependency in config['dependencies']:
+
+        groupId = dependency.get('groupId')
+        artifactId = dependency.get('artifactId')
+        version = dependency.get('version')
+        packaging = dependency.get('packaging', 'zip')
+
+        reposArtifactId = artifactId.replace('-', '/')
+        reposArtifactId = reposArtifactId.replace('.', '-')
+
+        mavenGroupId = groupId + '.' + reposArtifactId
+        mavenArtifactId = artifactId + '-' + aol
+
+        if info(config):
+            print('dependency:')
+            print('    groupId = ' + groupId)
+            print('    artifactId = ' + artifactId)
+            print('    mavenGroupId = ' + mavenGroupId)
+            print('    mavenArtifactId = ' + mavenArtifactId)
+            print('    version = ' + version)
+            print('    aol = ' + aol)
+
+        downloadArtifact(config, mavenGroupId, mavenArtifactId, version, packaging)
+        expandArtifact(config, mavenGroupId, mavenArtifactId, version, packaging, dependances)
+
+
+####################################################################################################
+# Configure
+####################################################################################################
+
+def configure(config):
+    pass
+
+####################################################################################################
+# Make
+####################################################################################################
+
+def make(config, source, output, operatingSystem):
+
+        if not os.path.exists(output):
+            os.makedirs(output)
+
+        if operatingSystem == 'Windows':
+            environ = os.environ
+            environ['BUILD_TYPE'] = 'normal'
+            environ['SOURCE_DIR'] = src
+            environ['BUILD_DIR'] = build
+            makefile = os.path.abspath(src + '/make/' + aol + '.makefile')
+            print('makefile = ' + makefile)
+
+            runProgram(config, output, environ, ['make', '-f', makefile, 'all'])
+
+        else:     # Linux or MinGW or CygWin
+            runProgram(config, source, os.environ, ['make', 'clean'])
+            runProgram(config, source, os.environ, ['make'])
+            runProgram(config, source, os.environ, ['make', 'install'])
+
+
+####################################################################################################
+# Dist
+####################################################################################################
+
+def dist(config, build, aol, localfile, packaging):
+
+        artifactDir = os.path.abspath(build + '/artifact')
+        if not os.path.exists(artifactDir):
+            os.makedirs(artifactDir)
+
+        artifactId = config["artifactId"]
+        localfile = os.path.abspath(artifactDir + '/' + artifactId + '-' + aol)
+        packaging = 'zip'
+        shutil.make_archive(localfile, packaging, build + '/dist')
+
+
+#
+####################################################################################################
+# Deploy
+####################################################################################################
+
+def deploy(config, build, aol, packaging):
+
+        groupId = config["groupId"]
+        artifactId = config["artifactId"]
+        version = multipleReplace(config["version"], config["properties"])
+        packaging = 'zip'
+
+        reposArtifactId = artifactId.replace('-', '/')
+        reposArtifactId = reposArtifactId.replace('.', '-')
+
+        mavenGroupId = groupId + '.' + reposArtifactId
+        mavenArtifactId = artifactId + '-' + aol
+
+        artifactDir = os.path.abspath(build + '/artifact')
+        filename = os.path.abspath(artifactDir + '/' + mavenArtifactId + '.' + packaging)
+
+        if debug(config):
+            print('main: deploy')
+            print('    groupId = ' + groupId)
+            print('    artifactId = ' + artifactId)
+            print('    mavenGroupId = ' + mavenGroupId)
+            print('    mavenArtifactId = ' + mavenArtifactId)
+            print('    aol = ' + aol)
+            print('    version = ' + version)
+            print('    packaging = ' + packaging)
+            print('    filename = ' + filename)
+
+        uploadArtifact(config, mavenGroupId, mavenArtifactId, version, packaging, filename)
 
 ####################################################################################################
 # Main Routine
@@ -999,131 +1124,35 @@ def main(argv):
     dist = os.path.abspath(build + '/dist')
     dependances = os.path.abspath(build + '/dependances')
 
+    packaging = 'zip'
+
     ####################################################################################################
-    # Clean
+    # Call the build processes
     ####################################################################################################
 
     if 'clean' in goals:
         print('goal = clean')
-        shutil.rmtree(build, ignore_errors=True)
-
-    ####################################################################################################
-    # Build the source directory
-    ####################################################################################################
+        clean(config, build)
 
     if 'generate' in goals:
-
         print('goal = generate')
-
-        for dependency in config['dependencies']:
-
-            groupId = dependency.get('groupId')
-            artifactId = dependency.get('artifactId')
-            version = dependency.get('version')
-            packaging = dependency.get('packaging', 'zip')
-
-            reposArtifactId = artifactId.replace('-', '/')
-            reposArtifactId = reposArtifactId.replace('.', '-')
-
-            mavenGroupId = groupId + '.' + reposArtifactId
-            mavenArtifactId = artifactId + '-' + aol
-
-            if info(config):
-                print('dependency:')
-                print('    groupId = ' + groupId)
-                print('    artifactId = ' + artifactId)
-                print('    mavenGroupId = ' + mavenGroupId)
-                print('    mavenArtifactId = ' + mavenArtifactId)
-                print('    version = ' + version)
-                print('    aol = ' + aol)
-
-            downloadArtifact(config, mavenGroupId, mavenArtifactId, version, packaging)
-            expandArtifact(config, mavenGroupId, mavenArtifactId, version, packaging, dependances)
-
-    ####################################################################################################
-    # Configure
-    ####################################################################################################
+        generate(config, aol, packaging, dependances)
 
     if 'configure' in goals:
         print('goal = configure')
-
-
-    ####################################################################################################
-    # Make
-    ####################################################################################################
+        configure(config)
 
     if 'make' in goals:
-
         print('goal = make')
-
-        if not os.path.exists(output):
-            os.makedirs(output)
-
-        if operatingSystem == 'Windows':
-            environ = os.environ
-            environ['BUILD_TYPE'] = 'normal'
-            environ['SOURCE_DIR'] = src
-            environ['BUILD_DIR'] = build
-            makefile = os.path.abspath(src + '/make/' + aol + '.makefile')
-            print('makefile = ' + makefile)
-
-            runProgram(config, output, environ, ['make', '-f', makefile, 'all'])
-
-        else:     # Linux or MinGW or CygWin
-            runProgram(config, source, os.environ, ['make', 'clean'])
-            runProgram(config, source, os.environ, ['make'])
-            runProgram(config, source, os.environ, ['make', 'install'])
-
-
-    ####################################################################################################
-    # Make the distribution
-    ####################################################################################################
+        make(config, source, output, operatingSystem)
 
     if 'dist' in goals:
         print('goal = dist')
-
-        artifactDir = os.path.abspath(build + '/artifact')
-        if not os.path.exists(artifactDir):
-            os.makedirs(artifactDir)
-
-        artifactId = config["artifactId"]
-        localfile = os.path.abspath(artifactDir + '/' + artifactId + '-' + aol)
-        packaging = 'zip'
-        shutil.make_archive(localfile, packaging, build + '/dist')
-
-
-    ####################################################################################################
-    # Deploy to nexus
-    ####################################################################################################
+        dist(config, build, aol, localfile, packaging)
 
     if 'deploy' in goals:
-
-        groupId = config["groupId"]
-        artifactId = config["artifactId"]
-        version = multipleReplace(config["version"], config["properties"])
-        packaging = 'zip'
-
-        reposArtifactId = artifactId.replace('-', '/')
-        reposArtifactId = reposArtifactId.replace('.', '-')
-
-        mavenGroupId = groupId + '.' + reposArtifactId
-        mavenArtifactId = artifactId + '-' + aol
-
-        artifactDir = os.path.abspath(build + '/artifact')
-        filename = os.path.abspath(artifactDir + '/' + mavenArtifactId + '.' + packaging)
-
-        if debug(config):
-            print('main: deploy')
-            print('    groupId = ' + groupId)
-            print('    artifactId = ' + artifactId)
-            print('    mavenGroupId = ' + mavenGroupId)
-            print('    mavenArtifactId = ' + mavenArtifactId)
-            print('    aol = ' + aol)
-            print('    version = ' + version)
-            print('    packaging = ' + packaging)
-            print('    filename = ' + filename)
-
-        uploadArtifact(config, mavenGroupId, mavenArtifactId, version, packaging, filename)
+        print('goal = deploy')
+        deploy(config, build, aol, packaging)
 
 
     ####################################################################################################
