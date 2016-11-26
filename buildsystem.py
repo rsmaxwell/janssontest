@@ -1023,7 +1023,7 @@ def main(argv, clean, generate, configure, make, distribution, deploy):
 
     if 'dist' in goals:
         print('goal = dist')
-        distribution(config, build, os, operatingSystem, aol, packaging)
+        distribution(config, build, dist, os, operatingSystem, aol, packaging)
 
     if 'deploy' in goals:
         print('goal = deploy')

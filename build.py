@@ -86,7 +86,7 @@ def make(config, src, source, sourcesrc, output, build, os, operatingSystem, aol
 # Dist
 ####################################################################################################
 
-def distribution(config, build, os, operatingSystem, aol, packaging):
+def distribution(config, sourcesrc, build, output, dist, os, operatingSystem, aol, packaging):
 
     dist = os.path.abspath(build + '/dist')
     if not os.path.exists(dist):
