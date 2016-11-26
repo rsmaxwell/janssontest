@@ -493,13 +493,13 @@ def uploadFileAndHashes(config, file, filePath, fileName, packaging):
 
     deployment = config['distributionManagement']['repository']['deployment']
     repositoryId = multipleReplace(deployment['id'], config['properties'])
-    repositoryURL = multipleReplace(deployment['url'], config['properties'])
-    url = repositoryURL + '/' + filePath + '/' + fileName + '.' + packaging
+    repositoryUrl = multipleReplace(deployment['url'], config['properties'])
+    url = repositoryUrl + '/' + filePath + '/' + fileName + '.' + packaging
 
     if debug(config):
         print('uploadFileAndHashes(2)')
         print('    repositoryId =', repositoryId)
-        print('    repositoryURL =', repositoryURL)
+        print('    repositoryUrl =', repositoryUrl)
         print('    url = ', url)
 
     uploadFile(config, file, repositoryId, url)
@@ -839,7 +839,7 @@ def expandArtifact(config, mavenGroupId, mavenArtifactId, version, packaging, de
 # Main Routine
 ####################################################################################################
 
-def main(argv, clean, generate, configure, make, dist, deploy):
+def main(argv, clean, generate, configure, make, distribution, deploy):
 
     ####################################################################################################
     # Parse command line arguments
@@ -1011,23 +1011,23 @@ def main(argv, clean, generate, configure, make, dist, deploy):
 
     if 'generate' in goals:
         print('goal = generate')
-        generate(config, aol, packaging, dependances)
+        generate(config, src, source, temp, os, operatingSystem, aol, packaging, dependances)
 
     if 'configure' in goals:
         print('goal = configure')
-        configure(config)
+        configure(config, output, source, dist, operatingSystem, sourcesrc)
 
     if 'make' in goals:
         print('goal = make')
-        make(config, src, source, output, operatingSystem)
+        make(config, src, source, sourcesrc, output, build, os, operatingSystem, aol)
 
     if 'dist' in goals:
         print('goal = dist')
-        dist(config, build, aol, localfile, packaging)
+        distribution(config, build, os, operatingSystem, aol, packaging)
 
     if 'deploy' in goals:
         print('goal = deploy')
-        deploy(config, build, aol, packaging)
+        deploy(config, build, os, aol, packaging)
 
 
     ####################################################################################################

@@ -2,6 +2,7 @@
 import sys
 import shutil
 import buildsystem
+from distutils.dir_util import copy_tree
 
 
 ####################################################################################################
@@ -16,7 +17,9 @@ def clean(config, build):
 # Generate
 ####################################################################################################
 
-def generate(config, src, source, temp, os, aol, packaging, dependances):
+def generate(config, src, source, temp, os, operatingSystem, aol, packaging, dependances):
+
+    copy_tree(src, source)    
 
     for dependency in config['dependencies']:
 
@@ -48,39 +51,46 @@ def generate(config, src, source, temp, os, aol, packaging, dependances):
 # Configure
 ####################################################################################################
 
-def configure(config, output, dist, operatingSystem, sourcesrc):
+def configure(config, output, source, dist, operatingSystem, sourcesrc):
     pass
 
 ####################################################################################################
 # Make
 ####################################################################################################
 
-def make(config, src, source, sourcesrc, output, operatingSystem, aol):
+def make(config, src, source, sourcesrc, output, build, os, operatingSystem, aol):
+
+    if buildsystem.info(config):
+        print('make:')
+        print('    source = ' + source)
+        print('    sourcesrc = ' + sourcesrc)
+        print('    output = ' + output)
+        print('    operatingSystem = ' + operatingSystem)
+        print('    aol = ' + aol)
 
     if not os.path.exists(output):
         os.makedirs(output)
 
-    if operatingSystem == 'Windows':
-        environ = os.environ
-        environ['BUILD_TYPE'] = 'normal'
-        environ['SOURCE_DIR'] = src
-        environ['BUILD_DIR'] = build
-        makefile = os.path.abspath(src + '/make/' + aol + '.makefile')
-        print('makefile = ' + makefile)
+    environ = os.environ
+    environ['BUILD_TYPE'] = 'normal'
+    environ['SOURCE_DIR'] = os.path.abspath(src + '/c')
+    environ['BUILD_DIR'] = build
 
-        buildsystem.runProgram(config, output, environ, ['make', '-f', makefile, 'all'])
+    makefile = os.path.abspath(src + '/make/' + aol + '.makefile')
+    print('makefile = ' + makefile)
 
-    else:     # Linux or MinGW or CygWin
-        buildsystem.runProgram(config, source, os.environ, ['make', 'clean'])
-        buildsystem.runProgram(config, source, os.environ, ['make'])
-        buildsystem.runProgram(config, source, os.environ, ['make', 'install'])
+    buildsystem.runProgram(config, output, environ, ['make', '-f', makefile, 'all'])
 
 
 ####################################################################################################
 # Dist
 ####################################################################################################
 
-def distribution(config, build, aol, localfile, packaging):
+def distribution(config, build, os, operatingSystem, aol, packaging):
+
+    dist = os.path.abspath(build + '/dist')
+    if not os.path.exists(dist):
+        os.makedirs(dist)
 
     artifactDir = os.path.abspath(build + '/artifact')
     if not os.path.exists(artifactDir):
@@ -89,18 +99,18 @@ def distribution(config, build, aol, localfile, packaging):
     artifactId = config["artifactId"]
     localfile = os.path.abspath(artifactDir + '/' + artifactId + '-' + aol)
     packaging = 'zip'
-    shutil.make_archive(localfile, packaging, build + '/dist')
+    shutil.make_archive(localfile, packaging, dist)
 
 
 ####################################################################################################
 # Deploy
 ####################################################################################################
 
-def deploy(config, build, aol, packaging):
+def deploy(config, build, os, aol, packaging):
 
     groupId = config["groupId"]
     artifactId = config["artifactId"]
-    version = multipleReplace(config["version"], config["properties"])
+    version = buildsystem.multipleReplace(config["version"], config["properties"])
     packaging = 'zip'
 
     reposArtifactId = artifactId.replace('-', '/')
