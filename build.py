@@ -51,7 +51,7 @@ def generate(config, src, source, temp, os, operatingSystem, aol, packaging, dep
 # Configure
 ####################################################################################################
 
-def configure(config, output, source, dist, operatingSystem, sourcesrc):
+def configure(config, output, source, build, dist, operatingSystem, sourcesrc):
     pass
 
 ####################################################################################################
