@@ -71,7 +71,7 @@ def make(config, src, source, sourcesrc, output, build, os, operatingSystem, aol
     if not os.path.exists(output):
         os.makedirs(output)
 
-    environ = buildsystem.getGitInfo(config, os.environ)
+    environ = buildsystem.getBuildInfo(config, os.environ)
     environ['BUILD_TYPE'] = 'normal'
     environ['SOURCE_DIR'] = os.path.abspath(src + '/c')
     environ['BUILD_DIR'] = build
