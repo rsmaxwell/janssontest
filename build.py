@@ -19,7 +19,7 @@ def clean(config, build):
 
 def generate(config, src, source, temp, os, operatingSystem, aol, packaging, dependances):
 
-    copy_tree(src, source)    
+    copy_tree(src, source)
 
     for dependency in config['dependencies']:
 
@@ -71,7 +71,7 @@ def make(config, src, source, sourcesrc, output, build, os, operatingSystem, aol
     if not os.path.exists(output):
         os.makedirs(output)
 
-    environ = os.environ
+    environ = buildsystem.getGitInfo(os.environ)
     environ['BUILD_TYPE'] = 'normal'
     environ['SOURCE_DIR'] = os.path.abspath(src + '/c')
     environ['BUILD_DIR'] = build
