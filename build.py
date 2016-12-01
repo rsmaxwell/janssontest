@@ -17,7 +17,7 @@ def clean(config, build):
 # Generate
 ####################################################################################################
 
-def generate(config, src, source, temp, os, operatingSystem, aol, packaging, dependances):
+def generate(config, src, source, temp, os, operatingSystem, linker, aol, packaging, dependances):
 
     copy_tree(src, source)
 
@@ -51,7 +51,7 @@ def generate(config, src, source, temp, os, operatingSystem, aol, packaging, dep
 # Configure
 ####################################################################################################
 
-def configure(config, output, source, build, dist, operatingSystem, sourcesrc):
+def configure(config, output, source, build, dist, operatingSystem, linker, sourcesrc):
     pass
 
 ####################################################################################################
