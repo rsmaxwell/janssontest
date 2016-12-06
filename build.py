@@ -1,6 +1,7 @@
 
 import sys
 import shutil
+import os
 import buildsystem
 from distutils.dir_util import copy_tree
 
@@ -9,17 +10,17 @@ from distutils.dir_util import copy_tree
 # Clean
 ####################################################################################################
 
-def clean(config, location, aol, packaging):
-    shutil.rmtree(location.build, ignore_errors=True)
+def clean(config, aol):
+    buildsystem.defaultClean(config, aol)
 
 
 ####################################################################################################
 # Generate
 ####################################################################################################
 
-def generate(config, location, aol, packaging):
+def generate(config, aol):
 
-    copy_tree(src, location.source)
+    copy_tree(buildsystem.SRC_DIR, buildsystem.SOURCE_DIR)
 
     for dependency in config['dependencies']:
 
@@ -32,7 +33,7 @@ def generate(config, location, aol, packaging):
         reposArtifactId = reposArtifactId.replace('.', '-')
 
         mavenGroupId = groupId + '.' + reposArtifactId
-        mavenArtifactId = artifactId + '-' + aol
+        mavenArtifactId = artifactId + '-' + str(aol)
 
         if buildsystem.info(config):
             print('dependency:')
@@ -43,68 +44,53 @@ def generate(config, location, aol, packaging):
             print('    version = ' + version)
             print('    aol = ' + str(aol))
 
-        buildsystem.downloadArtifact(config, mavenGroupId, mavenArtifactId, version, packaging)
-        buildsystem.expandArtifact(config, mavenGroupId, mavenArtifactId, version, packaging, dependances)
+        buildsystem.downloadArtifact(config, mavenGroupId, mavenArtifactId, version)
+        buildsystem.expandArtifact(config, mavenGroupId, mavenArtifactId, version, buildsystem.DEPENDENCIES_DIR)
 
 
 ####################################################################################################
 # Configure
 ####################################################################################################
 
-def configure(config, location, aol, packaging):
+def configure(config, aol):
     pass
 
 ####################################################################################################
 # Make
 ####################################################################################################
 
-def make(config, location, aol, packaging):
+def make(config, aol):
 
-    if buildsystem.info(config):
-        print('make:')
-        print('    source = ' + location.source)
-        print('    sourcesrc = ' + location.sourcesrc)
-        print('    output = ' + location.output)
+    buildsystem.mkdir_p(buildsystem.OUTPUT_DIR)
 
-    if not os.path.exists(location.output):
-        os.makedirs(location.output)
+    makefile = os.path.relpath(buildsystem.MAKE_DIR, buildsystem.OUTPUT_DIR) + '\\' + str(aol) + '.makefile'
 
-    environ = buildsystem.getBuildInfo(config, os.environ)
+    environ = os.environ
     environ['BUILD_TYPE'] = 'normal'
-    environ['SOURCE_DIR'] = os.path.abspath(src + '/c')
-    environ['BUILD_DIR'] = location.build
-
-    makefile = os.path.abspath(location.src + '/make/' + str(aol) + '.makefile')
-    print('makefile = ' + makefile)
-
-    buildsystem.runProgram(config, location.output, environ, ['make', '-f', makefile, 'all'])
+    environ['SOURCE'] = os.path.relpath(buildsystem.SOURCESRC_DIR, buildsystem.OUTPUT_DIR)
+    environ['OUTPUT'] = '.'
+    buildsystem.runProgram(config, buildsystem.OUTPUT_DIR, os.environ, ['make', '-f', makefile, 'clean', 'all'])
 
 
 ####################################################################################################
 # Dist
 ####################################################################################################
 
-def distribution(config, location, aol, packaging):
+def distribution(config, aol):
 
-    dist = os.path.abspath(location.build + '/dist')
-    if not os.path.exists(location.dist):
-        os.makedirs(location.dist)
-
-    artifactDir = os.path.abspath(location.build + '/artifact')
-    if not os.path.exists(artifactDir):
-        os.makedirs(artifactDir)
+    buildsystem.mkdir_p(buildsystem.DIST_DIR)
+    buildsystem.mkdir_p(buildsystem.ARTIFACT_DIR)
 
     artifactId = config["artifactId"]
-    localfile = os.path.abspath(artifactDir + '/' + artifactId + '-' + str(aol))
-    packaging = 'zip'
-    shutil.make_archive(localfile, packaging, location.dist)
+    localfile = buildsystem.ARTIFACT_DIR + artifactId + '-' + str(aol)
+    shutil.make_archive(localfile, buildsystem.PACKAGING, buildsystem.DIST_DIR)
 
 
 ####################################################################################################
 # Deploy
 ####################################################################################################
 
-def deploy(config, location, aol, packaging):
+def deploy(config, aol):
 
     groupId = config["groupId"]
     artifactId = config["artifactId"]
@@ -116,8 +102,7 @@ def deploy(config, location, aol, packaging):
     mavenGroupId = groupId + '.' + reposArtifactId
     mavenArtifactId = artifactId + '-' + str(aol)
 
-    artifactDir = os.path.abspath(location.build + '/artifact')
-    filename = os.path.abspath(artifactDir + '/' + mavenArtifactId + '.' + packaging)
+    filename = buildsystem.ARTIFACT_DIR + mavenArtifactId + '.' + buildsystem.PACKAGING
 
     if buildsystem.debug(config):
         print('main: deploy')
@@ -127,10 +112,9 @@ def deploy(config, location, aol, packaging):
         print('    mavenArtifactId = ' + mavenArtifactId)
         print('    aol = ' + str(aol))
         print('    version = ' + version)
-        print('    packaging = ' + packaging)
         print('    filename = ' + filename)
 
-    buildsystem.uploadArtifact(config, mavenGroupId, mavenArtifactId, version, packaging, filename)
+    buildsystem.uploadArtifact(config, mavenGroupId, mavenArtifactId, version, filename)
 
 
 ####################################################################################################
