@@ -67,7 +67,7 @@ def make(config, aol):
 
     environ = os.environ
     environ['BUILD_TYPE'] = 'normal'
-    environ['SOURCE'] = os.path.relpath(buildsystem.SOURCESRC_DIR, buildsystem.OUTPUT_DIR)
+    environ['SOURCE'] = os.path.relpath(buildsystem.SOURCE_SRC_DIR, buildsystem.OUTPUT_DIR)
     environ['OUTPUT'] = '.'
     buildsystem.runProgram(config, buildsystem.OUTPUT_DIR, os.environ, ['make', '-f', makefile, 'clean', 'all'])
 
