@@ -6,13 +6,8 @@ import buildsystem
 from distutils.dir_util import copy_tree
 
 
-####################################################################################################
-# Clean
-####################################################################################################
-
-def clean(config, aol):
-    buildsystem.defaultClean(config, aol)
-
+SOURCE_C_DIR       = './build/source/c/'
+SOURCE_MAKE_DIR    = './build/source/make/'
 
 ####################################################################################################
 # Generate
@@ -63,13 +58,13 @@ def make(config, aol):
 
     buildsystem.mkdir_p(buildsystem.OUTPUT_DIR)
 
-    makefile = os.path.relpath(buildsystem.MAKE_DIR, buildsystem.OUTPUT_DIR) + '\\' + str(aol) + '.makefile'
+    makefile = os.path.relpath(SOURCE_MAKE_DIR, buildsystem.OUTPUT_DIR) + '\\' + str(aol) + '.makefile'
 
-    environ = os.environ
-    environ['BUILD_TYPE'] = 'normal'
-    environ['SOURCE'] = os.path.relpath(buildsystem.SOURCE_SRC_DIR, buildsystem.OUTPUT_DIR)
-    environ['OUTPUT'] = '.'
-    buildsystem.runProgram(config, buildsystem.OUTPUT_DIR, os.environ, ['make', '-f', makefile, 'clean', 'all'])
+    env = os.environ
+    env['BUILD_TYPE'] = 'normal'
+    env['SOURCE_DIR'] = os.path.relpath(SOURCE_C_DIR, buildsystem.OUTPUT_DIR)
+    env['OUTPUT_DIR'] = '.'
+    buildsystem.runProgram(config, buildsystem.OUTPUT_DIR, env, ['make', '-f', makefile, 'clean', 'all'])
 
 
 ####################################################################################################
@@ -87,39 +82,8 @@ def distribution(config, aol):
 
 
 ####################################################################################################
-# Deploy
-####################################################################################################
-
-def deploy(config, aol):
-
-    groupId = config["groupId"]
-    artifactId = config["artifactId"]
-    version = buildsystem.multipleReplace(config["version"], config["properties"])
-
-    reposArtifactId = artifactId.replace('-', '/')
-    reposArtifactId = reposArtifactId.replace('.', '-')
-
-    mavenGroupId = groupId + '.' + reposArtifactId
-    mavenArtifactId = artifactId + '-' + str(aol)
-
-    filename = buildsystem.ARTIFACT_DIR + mavenArtifactId + '.' + buildsystem.PACKAGING
-
-    if buildsystem.debug(config):
-        print('main: deploy')
-        print('    groupId = ' + groupId)
-        print('    artifactId = ' + artifactId)
-        print('    mavenGroupId = ' + mavenGroupId)
-        print('    mavenArtifactId = ' + mavenArtifactId)
-        print('    aol = ' + str(aol))
-        print('    version = ' + version)
-        print('    filename = ' + filename)
-
-    buildsystem.uploadArtifact(config, mavenGroupId, mavenArtifactId, version, filename)
-
-
-####################################################################################################
 # Call main routine
 ####################################################################################################
 
 if __name__ == "__main__":
-    buildsystem.main(sys.argv, clean, generate, configure, make, distribution, deploy)
+    buildsystem.main(sys.argv, None, generate, configure, make, distribution, None)
