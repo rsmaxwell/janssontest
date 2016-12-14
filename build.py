@@ -60,7 +60,9 @@ def make(config, aol):
 
     makefile = os.path.relpath(SOURCE_MAKE_DIR, buildsystem.OUTPUT_DIR) + '\\' + str(aol) + '.makefile'
 
-    env = os.environ
+    print("**** make ****")
+
+    env = buildsystem.getBuildInfo(config, os.environ)
     env['BUILD_TYPE'] = 'normal'
     env['SOURCE_DIR'] = os.path.relpath(SOURCE_C_DIR, buildsystem.OUTPUT_DIR)
     env['OUTPUT_DIR'] = '.'
@@ -86,4 +88,7 @@ def distribution(config, aol):
 ####################################################################################################
 
 if __name__ == "__main__":
-    buildsystem.main(sys.argv, None, generate, configure, make, distribution, None)
+    clean = None
+    deploy = None
+    run = None
+    buildsystem.main(sys.argv, clean, generate, configure, make, distribution, run, deploy)

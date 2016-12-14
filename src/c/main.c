@@ -16,9 +16,19 @@ int main(void) {
   char *build_dir = getenv("BUILD_DIR");
   
   char *s = NULL;
+  int returncode = 0;
 
   json_t *root = json_object();
   json_t *json_arr = json_array();
+
+  printf("GIT_ORIGIN = %s\n", gitOrigin);
+  printf("GIT_COMMIT = %s\n", gitCommit);
+  printf("GROUPID    = %s\n", groupId);
+  printf("ARTIFACTID = %s\n", artifactId);
+  printf("VERSION    = %s\n", version);
+  printf("BUILD_TYPE = %s\n", build_type);
+  printf("SOURCE_DIR = %s\n", source_dir);
+  printf("BUILD_DIR  = %s\n", build_dir);
 
   json_object_set_new( root, "destID", json_integer( 1 ) );
   json_object_set_new( root, "command", json_string("enable") );
@@ -34,10 +44,10 @@ int main(void) {
 
   puts(s);
   json_decref(root);
-  
-  
 
- return 0;
+  returncode = 0;
+  printf("Returning: %d\n", returncode);
+  return returncode;
 }
 
 
