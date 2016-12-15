@@ -6,8 +6,8 @@ import buildsystem
 from distutils.dir_util import copy_tree
 
 
-SOURCE_C_DIR       = './build/source/c/'
-SOURCE_MAKE_DIR    = './build/source/make/'
+SRC_C_DIR       = './build/src/c/'
+SRC_MAKE_DIR    = './build/src/make/'
 
 ####################################################################################################
 # Generate
@@ -15,7 +15,7 @@ SOURCE_MAKE_DIR    = './build/source/make/'
 
 def generate(config, aol):
 
-    copy_tree(buildsystem.SRC_DIR, buildsystem.SOURCE_DIR)
+    # copy_tree(buildsystem.SRC_DIR, buildsystem.SOURCE_DIR)
 
     for dependency in config['dependencies']:
 
@@ -58,13 +58,13 @@ def make(config, aol):
 
     buildsystem.mkdir_p(buildsystem.OUTPUT_DIR)
 
-    makefile = os.path.relpath(SOURCE_MAKE_DIR, buildsystem.OUTPUT_DIR) + '\\' + str(aol) + '.makefile'
+    makefile = os.path.relpath(SRC_MAKE_DIR, buildsystem.OUTPUT_DIR) + '\\' + str(aol) + '.makefile'
 
     print("**** make ****")
 
     env = buildsystem.getBuildInfo(config, os.environ)
     env['BUILD_TYPE'] = 'normal'
-    env['SOURCE_DIR'] = os.path.relpath(SOURCE_C_DIR, buildsystem.OUTPUT_DIR)
+    env['SOURCE_DIR'] = os.path.relpath(SRC_C_DIR, buildsystem.OUTPUT_DIR)
     env['OUTPUT_DIR'] = '.'
     buildsystem.runProgram(config, buildsystem.OUTPUT_DIR, env, ['make', '-f', makefile, 'clean', 'all'])
 
@@ -76,7 +76,15 @@ def make(config, aol):
 def distribution(config, aol):
 
     buildsystem.mkdir_p(buildsystem.DIST_DIR)
-    buildsystem.mkdir_p(buildsystem.ARTIFACT_DIR)
+    buildsystem.mkdir_p(buildsystem.ARTIFACT_DIR)   
+	buildsystem.mkdir_p(buildsystem.DIST_BIN_DIR)
+    buildsystem.mkdir_p(buildsystem.TEST_DIR) 
+	
+    for file in glob.iglob(buildsystem.OUTPUT_DIR + 'janssontest*'):
+        shutil.copy2(file, buildsystem.DIST_BIN_DIR)	
+
+    for file in glob.iglob(buildsystem.OUTPUT_DIR + 'janssontest*'):
+        shutil.copy2(file, buildsystem.TEST_DIR)
 
     artifactId = config["artifactId"]
     localfile = buildsystem.ARTIFACT_DIR + artifactId + '-' + str(aol)
