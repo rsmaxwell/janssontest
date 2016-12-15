@@ -2,6 +2,7 @@
 import sys
 import shutil
 import os
+import glob
 import buildsystem
 from distutils.dir_util import copy_tree
 
@@ -44,13 +45,6 @@ def generate(config, aol):
 
 
 ####################################################################################################
-# Configure
-####################################################################################################
-
-def configure(config, aol):
-    pass
-
-####################################################################################################
 # Make
 ####################################################################################################
 
@@ -60,8 +54,6 @@ def make(config, aol):
 
     makefile = os.path.relpath(SRC_MAKE_DIR, buildsystem.OUTPUT_DIR) + '\\' + str(aol) + '.makefile'
 
-    print("**** make ****")
-
     env = buildsystem.getBuildInfo(config, os.environ)
     env['BUILD_TYPE'] = 'normal'
     env['SOURCE_DIR'] = os.path.relpath(SRC_C_DIR, buildsystem.OUTPUT_DIR)
@@ -70,14 +62,14 @@ def make(config, aol):
 
 
 ####################################################################################################
-# Dist
+# Distribution
 ####################################################################################################
 
 def distribution(config, aol):
 
     buildsystem.mkdir_p(buildsystem.DIST_DIR)
     buildsystem.mkdir_p(buildsystem.ARTIFACT_DIR)   
-	buildsystem.mkdir_p(buildsystem.DIST_BIN_DIR)
+    buildsystem.mkdir_p(buildsystem.DIST_BIN_DIR)
     buildsystem.mkdir_p(buildsystem.TEST_DIR) 
 	
     for file in glob.iglob(buildsystem.OUTPUT_DIR + 'janssontest*'):
@@ -96,7 +88,4 @@ def distribution(config, aol):
 ####################################################################################################
 
 if __name__ == "__main__":
-    clean = None
-    deploy = None
-    run = None
-    buildsystem.main(sys.argv, clean, generate, configure, make, distribution, run, deploy)
+    buildsystem.main(generate=generate, make=make, distribution=distribution)
