@@ -58,7 +58,10 @@ def make(config, aol):
     env['BUILD_TYPE'] = 'normal'
     env['SOURCE_DIR'] = os.path.relpath(SRC_C_DIR, buildsystem.OUTPUT_DIR)
     env['OUTPUT_DIR'] = '.'
-    buildsystem.runProgram(config, buildsystem.OUTPUT_DIR, env, ['make', '-f', makefile, 'clean', 'all'])
+    stdout, stderr, returncode = buildsystem.runProgram(config, buildsystem.OUTPUT_DIR, env, ['make', '-f', makefile, 'clean', 'all'])
+    if returncode != 0:
+        print('Error running make')
+        sys.exit(3)    
 
 
 ####################################################################################################
