@@ -11,7 +11,7 @@ from distutils.dir_util import copy_tree
 # Make
 ####################################################################################################
 
-def make(config, aol):
+def compile(config, aol):
 
     buildsystem.mkdir_p(buildsystem.BUILD_OUTPUT_MAIN_DIR)
 
@@ -24,7 +24,7 @@ def make(config, aol):
     stdout, stderr, returncode = buildsystem.runProgram(config, buildsystem.BUILD_OUTPUT_MAIN_DIR, env, ['make', '-f', makefile, 'clean', 'all'])
     if returncode != 0:
         print('Error running make')
-        sys.exit(3)    
+        sys.exit(3)
 
 
 ####################################################################################################
@@ -33,11 +33,11 @@ def make(config, aol):
 
 def distribution(config, aol):
 
-    buildsystem.mkdir_p(buildsystem.BUILD_ARTIFACT_DIR)   
-    buildsystem.mkdir_p(buildsystem.BUILD_OUTPUT_MAIN_DIR) 
+    buildsystem.mkdir_p(buildsystem.BUILD_ARTIFACT_DIR)
+    buildsystem.mkdir_p(buildsystem.BUILD_OUTPUT_MAIN_DIR)
     buildsystem.mkdir_p(buildsystem.DIST_DIR)
     buildsystem.mkdir_p(buildsystem.DIST_BIN_DIR)
-	
+
     for file in glob.iglob(buildsystem.BUILD_OUTPUT_MAIN_DIR + 'janssontest*.exe'):
         shutil.copy2(file, buildsystem.DIST_BIN_DIR)
 
@@ -51,4 +51,4 @@ def distribution(config, aol):
 ####################################################################################################
 
 if __name__ == "__main__":
-    buildsystem.main(make=make, distribution=distribution)
+    buildsystem.main(compile=compile, distribution=distribution)
