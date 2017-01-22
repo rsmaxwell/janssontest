@@ -2,6 +2,7 @@
 import sys
 import shutil
 import os
+import subprocess
 import glob
 import buildsystem
 from distutils.dir_util import copy_tree
@@ -16,15 +17,18 @@ def compile(config, aol):
     buildsystem.mkdir_p(buildsystem.BUILD_OUTPUT_MAIN_DIR)
 
     makefile = os.path.relpath(buildsystem.SRC_MAIN_MAKE_DIR, buildsystem.BUILD_OUTPUT_MAIN_DIR) + '\\' + str(aol) + '.makefile'
+    source = os.path.relpath(buildsystem.SRC_MAIN_C_DIR, buildsystem.BUILD_OUTPUT_MAIN_DIR)
+    dist = os.path.relpath(buildsystem.DIST_DIR, buildsystem.BUILD_OUTPUT_MAIN_DIR)
 
-    env = buildsystem.getBuildInfo(config, os.environ)
-    env['BUILD_TYPE'] = 'normal'
+    env = buildsystem.getBuildInfo(config, aol, os.environ)
+    env['BUILD_TYPE'] = 'static'
     env['SOURCE'] = os.path.relpath(buildsystem.SRC_MAIN_C_DIR, buildsystem.BUILD_OUTPUT_MAIN_DIR)
-    env['OUTPUT'] = '.'
-    stdout, stderr, returncode = buildsystem.runProgram(config, buildsystem.BUILD_OUTPUT_MAIN_DIR, env, ['make', '-f', makefile, 'clean', 'all'])
-    if returncode != 0:
-        print('Error running make')
-        sys.exit(3)
+    env['DIST'] = dist
+    env['INSTALL'] = buildsystem.INSTALL_DIR
+
+    p = subprocess.Popen(['make', '-f', makefile, 'clean', 'all'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, cwd=buildsystem.BUILD_OUTPUT_MAIN_DIR)
+    buildsystem.checkProcessCompletesOk(config, p, 'Error: Compile failed')
+
 
 
 ####################################################################################################
