@@ -20,9 +20,14 @@ def compile(config, aol):
     source = os.path.relpath(buildsystem.SRC_MAIN_C_DIR, buildsystem.BUILD_OUTPUT_MAIN_DIR)
     dist = os.path.relpath(buildsystem.DIST_DIR, buildsystem.BUILD_OUTPUT_MAIN_DIR)
 
+    if aol.linker.startswith('mingw'):
+        makefile = makefile.replace('\\', '/')
+        source = source.replace('\\', '/')
+        dist = dist.replace('\\', '/')
+
     env = buildsystem.getBuildInfo(config, aol, os.environ)
     env['BUILD_TYPE'] = 'static'
-    env['SOURCE'] = os.path.relpath(buildsystem.SRC_MAIN_C_DIR, buildsystem.BUILD_OUTPUT_MAIN_DIR)
+    env['SOURCE'] = source
     env['DIST'] = dist
     env['INSTALL'] = buildsystem.INSTALL_DIR
 
