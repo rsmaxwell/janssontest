@@ -14,17 +14,22 @@ from distutils.dir_util import copy_tree
 
 def compile(config, aol):
 
+    buildsystem.writeCompileTimeMetadata(config, aol)
+
     buildsystem.mkdir_p(config, aol, buildsystem.BUILD_OUTPUT_MAIN_DIR)
 
     makefile = os.path.relpath(buildsystem.SRC_MAIN_MAKE_DIR, buildsystem.BUILD_OUTPUT_MAIN_DIR) + '\\' + str(aol) + '.makefile'
     source = os.path.relpath(buildsystem.SRC_MAIN_C_DIR, buildsystem.BUILD_OUTPUT_MAIN_DIR)
     dist = os.path.relpath(buildsystem.DIST_DIR, buildsystem.BUILD_OUTPUT_MAIN_DIR)
 
-    buildsystem.writeCompileTimeMetadata(config, aol)
+    if aol.linker.startswith('mingw'):
+        makefile = makefile.replace('\\', '/')
+        source = source.replace('\\', '/')
+        dist = dist.replace('\\', '/')
 
     env = os.environ
     env['BUILD_TYPE'] = 'static'
-    env['SOURCE'] = os.path.relpath(buildsystem.SRC_MAIN_C_DIR, buildsystem.BUILD_OUTPUT_MAIN_DIR)
+    env['SOURCE'] = source
     env['DIST'] = dist
     env['INSTALL'] = buildsystem.INSTALL_DIR
 
