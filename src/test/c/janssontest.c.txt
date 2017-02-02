@@ -100,7 +100,7 @@ void testJansson(void) {
   int returncode = 0;
 
   json_t *root = json_object();
-  json_t *json_arr = json_array();  /*
+  json_t *json_arr = json_array();
   json_t *root2; 
   size_t flags;
   json_error_t error;
@@ -130,7 +130,7 @@ void testJansson(void) {
       CU_FAIL("destID is not an integer");
   }
   destID_value = (int) json_number_value(destID);
-  CU_ASSERT(1 == destID_value);  */
+  CU_ASSERT(1 == destID_value);  
 }
 
 /* The main() function for setting up and running the tests.
@@ -142,8 +142,6 @@ int main() {
    int CU_error = 0;
    int numberOfFailures = 0;
    CU_pSuite pSuite = NULL;
-
-   printf("HelloWorld\n");
 
    /* initialize the CUnit test registry */
    if (CUE_SUCCESS != CU_initialize_registry())
@@ -159,8 +157,8 @@ int main() {
    /* add the tests to the suite */
    /* NOTE - ORDER IS IMPORTANT - MUST TEST fread() AFTER fprintf() */
    if ((NULL == CU_add_test(pSuite, "test of fprintf()", testFPRINTF)) ||
-       (NULL == CU_add_test(pSuite, "test of fread()", testFREAD)) /* ||
-       (NULL == CU_add_test(pSuite, "test of Jansson()", testJansson)) */ )
+       (NULL == CU_add_test(pSuite, "test of fread()", testFREAD)) ||
+       (NULL == CU_add_test(pSuite, "test of Jansson()", testJansson)))
    {
       CU_cleanup_registry();
       return CU_get_error();
