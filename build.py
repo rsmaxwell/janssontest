@@ -16,7 +16,7 @@ def compile(config, aol):
 
     buildsystem.writeCompileTimeMetadata(config, aol)
 
-    buildsystem.mkdir_p(config, aol, buildsystem.BUILD_OUTPUT_MAIN_DIR)
+    buildsystem.mkdir(config, aol, buildsystem.BUILD_OUTPUT_MAIN_DIR)
 
     makefile = os.path.relpath(buildsystem.SRC_MAIN_MAKE_DIR, buildsystem.BUILD_OUTPUT_MAIN_DIR) + '/' + str(aol) + '.makefile'
     source = os.path.relpath(buildsystem.SRC_MAIN_C_DIR, buildsystem.BUILD_OUTPUT_MAIN_DIR)
@@ -42,16 +42,25 @@ def compile(config, aol):
 
 
 
+
+####################################################################################################
+# Make check
+####################################################################################################
+
+def check(config, aol):
+    pass
+
+
 ####################################################################################################
 # Distribution
 ####################################################################################################
 
 def distribution(config, aol):
 
-    buildsystem.mkdir_p(config, aol, buildsystem.BUILD_ARTIFACT_DIR)
-    buildsystem.mkdir_p(config, aol, buildsystem.BUILD_OUTPUT_MAIN_DIR)
-    buildsystem.mkdir_p(config, aol, buildsystem.DIST_DIR)
-    buildsystem.mkdir_p(config, aol, buildsystem.DIST_BIN_DIR)
+    buildsystem.mkdir(config, aol, buildsystem.BUILD_ARTIFACT_DIR)
+    buildsystem.mkdir(config, aol, buildsystem.BUILD_OUTPUT_MAIN_DIR)
+    buildsystem.mkdir(config, aol, buildsystem.DIST_DIR)
+    buildsystem.mkdir(config, aol, buildsystem.DIST_BIN_DIR)
 
     for file in glob.iglob(buildsystem.BUILD_OUTPUT_MAIN_DIR + 'janssontest*.exe'):
         shutil.copy2(file, buildsystem.DIST_BIN_DIR)
@@ -66,4 +75,4 @@ def distribution(config, aol):
 ####################################################################################################
 
 if __name__ == "__main__":
-    buildsystem.main(compile=compile, distribution=distribution)
+    buildsystem.main(compile=compile, check=check, distribution=distribution)
